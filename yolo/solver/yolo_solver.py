@@ -93,7 +93,7 @@ class YoloSolver(Solver):
 
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
-      if step % 10 == 0:
+      if step % 2 == 0:
         num_examples_per_step = self.dataset.batch_size
         examples_per_sec = num_examples_per_step / duration
         sec_per_batch = float(duration)
@@ -104,9 +104,9 @@ class YoloSolver(Solver):
                              examples_per_sec, sec_per_batch))
 
         sys.stdout.flush()
-      if step % 100 == 0:
+      if step % 2 == 0:
         summary_str = sess.run(summary_op, feed_dict={self.images: np_images, self.labels: np_labels, self.objects_num: np_objects_num})
         summary_writer.add_summary(summary_str, step)
-      if step % 5000 == 0:
+      if step % 100 == 0:
         saver2.save(sess, self.train_dir + '/model.ckpt', global_step=step)
     sess.close()

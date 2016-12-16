@@ -8,14 +8,17 @@ import cv2
 import numpy as np
 
 classes_name =  ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train","tvmonitor"]
+classes_name =  ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19","20"]
+
+num_classes = 2
 
 
 def process_predicts(predicts):
-  p_classes = predicts[0, :, :, 0:20]
-  C = predicts[0, :, :, 20:22]
-  coordinate = predicts[0, :, :, 22:]
+  p_classes = predicts[0, :, :, 0:num_classes]
+  C = predicts[0, :, :, num_classes:num_classes+2]
+  coordinate = predicts[0, :, :, num_classes+2:]
 
-  p_classes = np.reshape(p_classes, (7, 7, 1, 20))
+  p_classes = np.reshape(p_classes, (7, 7, 1, num_classes))
   C = np.reshape(C, (7, 7, 2, 1))
 
   P = C * p_classes
@@ -51,7 +54,7 @@ def process_predicts(predicts):
 
   return xmin, ymin, xmax, ymax, class_num
 
-common_params = {'image_size': 448, 'num_classes': 20, 
+common_params = {'image_size': 448, 'num_classes': num_classes, 
                 'batch_size':1}
 net_params = {'cell_size': 7, 'boxes_per_cell':2, 'weight_decay': 0.0005}
 
@@ -62,7 +65,7 @@ predicts = net.inference(image)
 
 sess = tf.Session()
 
-np_img = cv2.imread('cat.jpg')
+np_img = cv2.imread('data/annotated_images/brand_detection/pascal/1f14087084e6f6.jpg')
 resized_img = cv2.resize(np_img, (448, 448))
 np_img = cv2.cvtColor(resized_img, cv2.COLOR_BGR2RGB)
 
@@ -74,7 +77,8 @@ np_img = np.reshape(np_img, (1, 448, 448, 3))
 
 saver = tf.train.Saver(net.trainable_collection)
 
-saver.restore(sess,'models/pretrain/yolo_tiny.ckpt')
+#saver.restore(sess,'models/pretrain/yolo_tiny.ckpt')
+saver.restore(sess,'models/train/model.ckpt-100')
 
 np_predict = sess.run(predicts, feed_dict={image: np_img})
 
@@ -82,5 +86,5 @@ xmin, ymin, xmax, ymax, class_num = process_predicts(np_predict)
 class_name = classes_name[class_num]
 cv2.rectangle(resized_img, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 0, 255))
 cv2.putText(resized_img, class_name, (int(xmin), int(ymin)), 2, 1.5, (0, 0, 255))
-cv2.imwrite('cat_out.jpg', resized_img)
+cv2.imwrite('data/test/278b02aab59d85_out.jpg', resized_img)
 sess.close()
